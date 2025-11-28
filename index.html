@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calendario Semanal Estacional</title>
+  <title>Calendario Semanal Vertical</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -23,6 +23,11 @@
     <div class="days-week" id="daysWeek"></div>
   </div>
 
+  <!-- Color palette modal -->
+  <div id="colorModal" class="color-modal">
+    <div class="color-palette" id="colorPalette"></div>
+  </div>
+
   <script>
     const daysWeek = document.getElementById("daysWeek");
     const weekLabel = document.getElementById("weekLabel");
@@ -34,9 +39,25 @@
     const flowersContainer = document.getElementById("flowersContainer");
     const summerContainer = document.getElementById("summerContainer");
 
+    const colorModal = document.getElementById("colorModal");
+    const colorPalette = document.getElementById("colorPalette");
+
     let events = JSON.parse(localStorage.getItem("calendarEvents")) || [];
+    let selectedDate = null;
+    let newEventTitle = "";
+
+    // Start week on Sunday
     let currentWeek = new Date();
-    currentWeek.setDate(currentWeek.getDate() - (currentWeek.getDay() === 0 ? 6 : currentWeek.getDay() - 1));
+    currentWeek.setDate(currentWeek.getDate() - currentWeek.getDay());
+
+    const colors = {
+      "Azul":"#2b6cb0",
+      "Rojo":"#e53e3e",
+      "Verde":"#38a169",
+      "Naranja":"#dd6b20",
+      "Morado":"#805ad5",
+      "Rosa":"#d53f8c"
+    };
 
     function saveEvents(){
       localStorage.setItem("calendarEvents", JSON.stringify(events));
@@ -51,19 +72,19 @@
         c.innerHTML = "";
       });
 
-      if([11,0,1].includes(month)){ // Invierno
+      if([11,0,1].includes(month)){ // Winter
         calendar.style.background = "linear-gradient(to bottom, #a0c4ff, #ffffff)";
         snowContainer.style.display = "block";
         addSnow();
-      } else if([2,3,4].includes(month)){ // Primavera
+      } else if([2,3,4].includes(month)){ // Spring
         calendar.style.background = "linear-gradient(to bottom, #ffe4e1, #fff0f5)";
         flowersContainer.style.display = "block";
         addRoses();
-      } else if([5,6,7].includes(month)){ // Verano
+      } else if([5,6,7].includes(month)){ // Summer
         calendar.style.background = "linear-gradient(to bottom, #87ceeb, #ffe0a1)";
         summerContainer.style.display = "block";
         addWaves();
-      } else if([8,9,10].includes(month)){ // Otoño
+      } else if([8,9,10].includes(month)){ // Autumn
         calendar.style.background = "linear-gradient(to bottom, #ffb347, #ffcc99)";
         leavesContainer.style.display = "block";
         addRealLeaves();
@@ -84,14 +105,14 @@
     }
 
     function addRealLeaves(){
-      const colors = ["#d2691e","#ff8c00","#a0522d","#ff4500"];
+      const leafColors = ["#d2691e","#ff8c00","#a0522d","#ff4500"];
       for(let i=0;i<40;i++){
         const leaf = document.createElement("div");
         leaf.className = "leaf";
         const size = Math.random()*15 + 8;
         leaf.style.width = size + "px";
         leaf.style.height = size/2 + "px";
-        leaf.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
+        leaf.style.backgroundColor = leafColors[Math.floor(Math.random()*leafColors.length)];
         leaf.style.left = Math.random()*100 + "%";
         leaf.style.borderRadius = "50% 50% 50% 50% / 60% 60% 40% 40%";
         leaf.style.transform = `rotate(${Math.random()*360}deg)`;
@@ -101,7 +122,7 @@
     }
 
     function addRoses(){
-      const colors = ["#ff007f","#ff1493","#ff69b4"];
+      const roseColors = ["#ff007f","#ff1493","#ff69b4"];
       for(let i=0;i<30;i++){
         const rose = document.createElement("div");
         rose.className = "flower";
@@ -109,7 +130,7 @@
         rose.style.width = size + "px";
         rose.style.height = size + "px";
         rose.style.left = Math.random()*100 + "%";
-        rose.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
+        rose.style.backgroundColor = roseColors[Math.floor(Math.random()*roseColors.length)];
         rose.style.borderRadius = "50%";
         rose.style.animationDuration = (Math.random()*4+3)+"s";
         flowersContainer.appendChild(rose);
@@ -186,18 +207,39 @@
         dayDiv.appendChild(eventsContainer);
 
         dayDiv.addEventListener("click",()=>{
-          const eventTitle = prompt("Agregar evento para " + dayDate.toLocaleDateString('es-ES'));
-          if(eventTitle && eventTitle.trim()!==""){
-            const eventColor = prompt("Selecciona un color en formato HEX (ej: #ff0000):", "#2b6cb0");
-            events.push({date: dateStr, title: eventTitle.trim(), color: eventColor});
-            saveEvents();
-            renderWeek();
+          newEventTitle = prompt("Agregar nombre del evento para " + dayDate.toLocaleDateString('es-ES'));
+          if(newEventTitle && newEventTitle.trim() !== ""){
+            selectedDate = dateStr;
+            openColorPalette();
           }
         });
 
         daysWeek.appendChild(dayDiv);
       }
     }
+
+    function openColorPalette(){
+      colorPalette.innerHTML = "";
+      for(const [name, hex] of Object.entries(colors)){
+        const colorDiv = document.createElement("div");
+        colorDiv.className = "color-option";
+        colorDiv.style.backgroundColor = hex;
+        colorDiv.title = name;
+        colorDiv.onclick = ()=>{
+          events.push({date:selectedDate, title:newEventTitle.trim(), color:hex});
+          saveEvents();
+          colorModal.style.display = "none";
+          renderWeek();
+        };
+        colorPalette.appendChild(colorDiv);
+      }
+      colorModal.style.display = "flex";
+    }
+
+    // Close modal if clicked outside
+    colorModal.addEventListener("click", e=>{
+      if(e.target === colorModal) colorModal.style.display = "none";
+    });
 
     prevWeekBtn.onclick = ()=>{currentWeek.setDate(currentWeek.getDate()-7); renderWeek();}
     nextWeekBtn.onclick = ()=>{currentWeek.setDate(currentWeek.getDate()+7); renderWeek();}
@@ -206,4 +248,3 @@
 
 </body>
 </html>
-
