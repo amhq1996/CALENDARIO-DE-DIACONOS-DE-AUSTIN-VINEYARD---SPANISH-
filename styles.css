@@ -1,0 +1,151 @@
+body{
+  font-family: Arial, sans-serif;
+  background: #eef2ff;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:20px;
+}
+
+.calendar-week{
+  width: 900px;
+  border-radius:10px;
+  padding:10px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.1);
+  position: relative;
+  overflow: hidden;
+  transition: background 0.5s ease;
+}
+
+.header{
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  padding: 10px;
+  font-weight: bold;
+}
+
+.days-week{
+  display:flex;
+  justify-content: space-between;
+  margin-top:10px;
+}
+
+.day-week{
+  width:120px;
+  min-height:200px;
+  background:#f9f9f9;
+  border-radius:8px;
+  padding:5px;
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  transition: background 0.3s ease;
+}
+
+.day-week:hover{ background:#e0e7ff; }
+
+.day-num{ font-weight:bold; margin-bottom:4px; }
+
+.events-container{ margin-top:5px; width:100%; display:flex; flex-direction:column; gap:4px; }
+
+.event-item{
+  color:white;
+  font-size:0.75rem;
+  padding:3px 4px;
+  border-radius:4px;
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.event-item button{
+  background: transparent;
+  border: none;
+  color: white;
+  cursor:pointer;
+  margin-left:4px;
+  font-size:0.8rem;
+}
+
+.edit-btn:hover{ color: #ffeb3b; }
+.delete-btn:hover{ color: #ff4d4d; }
+
+/* Animaciones */
+.snow-container, .leaves-container, .flowers-container, .summer-container{
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  overflow:hidden;
+  z-index:0;
+  display:none;
+}
+
+/* Nieve */
+.snowflake{
+  position:absolute;
+  top:-10px;
+  background:white;
+  border-radius:50%;
+  opacity:0.8;
+  animation-name: fall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes fall{
+  0% { transform: translateY(0) translateX(0); opacity:0.8;}
+  100% { transform: translateY(250px) translateX(30px); opacity:0.4;}
+}
+
+/* Hojas otoño */
+.leaf{
+  position:absolute;
+  top:-20px;
+  border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;
+  opacity:0.8;
+  animation-name: leafFall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes leafFall{
+  0% { transform: translateY(0) translateX(0) rotate(0deg);}
+  100% { transform: translateY(250px) translateX(50px) rotate(360deg);}
+}
+
+/* Rosas primavera */
+.flower{
+  position:absolute;
+  top:-10px;
+  border-radius:50%;
+  opacity:0.9;
+  animation-name: flowerFall;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes flowerFall{
+  0% { transform: translateY(0) rotate(0deg);}
+  100% { transform: translateY(250px) rotate(360deg);}
+}
+
+/* Olas verano */
+.wave{
+  position:absolute;
+  bottom:0;
+  width:200%;
+  height:30px;
+  background: rgba(0,191,255,0.5);
+  border-radius: 100%;
+  animation: waveAnim 5s linear infinite;
+}
+
+@keyframes waveAnim{
+  0% { transform: translateX(0);}
+  100% { transform: translateX(-50%);}
+}

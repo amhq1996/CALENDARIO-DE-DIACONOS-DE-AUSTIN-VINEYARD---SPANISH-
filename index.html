@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendario Semanal Estacional</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="calendar-week">
+    <div id="snowContainer" class="snow-container"></div>
+    <div id="leavesContainer" class="leaves-container"></div>
+    <div id="flowersContainer" class="flowers-container"></div>
+    <div id="summerContainer" class="summer-container"></div>
+
+    <div class="header">
+      <button id="prevWeek">‹ Semana anterior</button>
+      <div class="week-label" id="weekLabel"></div>
+      <button id="nextWeek">Semana siguiente ›</button>
+    </div>
+
+    <div class="days-week" id="daysWeek"></div>
+  </div>
+
+  <script>
+    const daysWeek = document.getElementById("daysWeek");
+    const weekLabel = document.getElementById("weekLabel");
+    const prevWeekBtn = document.getElementById("prevWeek");
+    const nextWeekBtn = document.getElementById("nextWeek");
+
+    const snowContainer = document.getElementById("snowContainer");
+    const leavesContainer = document.getElementById("leavesContainer");
+    const flowersContainer = document.getElementById("flowersContainer");
+    const summerContainer = document.getElementById("summerContainer");
+
+    let events = JSON.parse(localStorage.getItem("calendarEvents")) || [];
+    let currentWeek = new Date();
+    currentWeek.setDate(currentWeek.getDate() - (currentWeek.getDay() === 0 ? 6 : currentWeek.getDay() - 1));
+
+    function saveEvents(){
+      localStorage.setItem("calendarEvents", JSON.stringify(events));
+    }
+
+    function setSeasonBackground(weekStart){
+      const month = weekStart.getMonth();
+      const calendar = document.querySelector(".calendar-week");
+
+      [snowContainer, leavesContainer, flowersContainer, summerContainer].forEach(c => {
+        c.style.display = "none";
+        c.innerHTML = "";
+      });
+
+      if([11,0,1].includes(month)){ // Invierno
+        calendar.style.background = "linear-gradient(to bottom, #a0c4ff, #ffffff)";
+        snowContainer.style.display = "block";
+        addSnow();
+      } else if([2,3,4].includes(month)){ // Primavera
+        calendar.style.background = "linear-gradient(to bottom, #ffe4e1, #fff0f5)";
+        flowersContainer.style.display = "block";
+        addRoses();
+      } else if([5,6,7].includes(month)){ // Verano
+        calendar.style.background = "linear-gradient(to bottom, #87ceeb, #ffe0a1)";
+        summerContainer.style.display = "block";
+        addWaves();
+      } else if([8,9,10].includes(month)){ // Otoño
+        calendar.style.background = "linear-gradient(to bottom, #ffb347, #ffcc99)";
+        leavesContainer.style.display = "block";
+        addRealLeaves();
+      }
+    }
+
+    function addSnow(){
+      for(let i=0;i<50;i++){
+        const flake = document.createElement("div");
+        flake.className = "snowflake";
+        const size = Math.random()*8 + 2;
+        flake.style.width = size + "px";
+        flake.style.height = size + "px";
+        flake.style.left = Math.random()*100 + "%";
+        flake.style.animationDuration = (Math.random()*3+3)+"s";
+        snowContainer.appendChild(flake);
+      }
+    }
+
+    function addRealLeaves(){
+      const colors = ["#d2691e","#ff8c00","#a0522d","#ff4500"];
+      for(let i=0;i<40;i++){
+        const leaf = document.createElement("div");
+        leaf.className = "leaf";
+        const size = Math.random()*15 + 8;
+        leaf.style.width = size + "px";
+        leaf.style.height = size/2 + "px";
+        leaf.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
+        leaf.style.left = Math.random()*100 + "%";
+        leaf.style.borderRadius = "50% 50% 50% 50% / 60% 60% 40% 40%";
+        leaf.style.transform = `rotate(${Math.random()*360}deg)`;
+        leaf.style.animationDuration = (Math.random()*5+5)+"s";
+        leavesContainer.appendChild(leaf);
+      }
+    }
+
+    function addRoses(){
+      const colors = ["#ff007f","#ff1493","#ff69b4"];
+      for(let i=0;i<30;i++){
+        const rose = document.createElement("div");
+        rose.className = "flower";
+        const size = Math.random()*12 + 8;
+        rose.style.width = size + "px";
+        rose.style.height = size + "px";
+        rose.style.left = Math.random()*100 + "%";
+        rose.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
+        rose.style.borderRadius = "50%";
+        rose.style.animationDuration = (Math.random()*4+3)+"s";
+        flowersContainer.appendChild(rose);
+      }
+    }
+
+    function addWaves(){
+      for(let i=0;i<3;i++){
+        const wave = document.createElement("div");
+        wave.className = "wave";
+        wave.style.bottom = (i*20) + "px";
+        wave.style.animationDelay = (i*1.5)+"s";
+        summerContainer.appendChild(wave);
+      }
+    }
+
+    function renderWeek(){
+      setSeasonBackground(currentWeek);
+      daysWeek.innerHTML = '';
+
+      const weekStart = new Date(currentWeek);
+      const weekEnd = new Date(currentWeek);
+      weekEnd.setDate(weekEnd.getDate()+6);
+      weekLabel.textContent = `${weekStart.toLocaleDateString()} - ${weekEnd.toLocaleDateString()}`;
+
+      for(let i=0;i<7;i++){
+        const dayDate = new Date(weekStart);
+        dayDate.setDate(weekStart.getDate() + i);
+        const dateStr = dayDate.toISOString().split("T")[0];
+
+        const dayDiv = document.createElement("div");
+        dayDiv.className = "day-week";
+        dayDiv.innerHTML = `<div class="day-num">${dayDate.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric'})}</div>`;
+
+        const eventsContainer = document.createElement("div");
+        eventsContainer.className = "events-container";
+
+        events.filter(e=>e.date===dateStr).forEach(ev=>{
+          const evDiv = document.createElement("div");
+          evDiv.className = "event-item";
+          evDiv.textContent = ev.title;
+          evDiv.style.backgroundColor = ev.color || "#2b6cb0";
+
+          const editBtn = document.createElement("button");
+          editBtn.className = "edit-btn";
+          editBtn.textContent = "✎";
+          editBtn.onclick = e=>{
+            e.stopPropagation();
+            const newTitle = prompt("Editar evento:", ev.title);
+            if(newTitle && newTitle.trim()!==""){
+              events[events.indexOf(ev)].title = newTitle.trim();
+              saveEvents();
+              renderWeek();
+            }
+          };
+
+          const delBtn = document.createElement("button");
+          delBtn.className = "delete-btn";
+          delBtn.textContent = "🗑";
+          delBtn.onclick = e=>{
+            e.stopPropagation();
+            if(confirm("¿Eliminar evento?")){
+              events.splice(events.indexOf(ev),1);
+              saveEvents();
+              renderWeek();
+            }
+          };
+
+          evDiv.appendChild(editBtn);
+          evDiv.appendChild(delBtn);
+          eventsContainer.appendChild(evDiv);
+        });
+
+        dayDiv.appendChild(eventsContainer);
+
+        dayDiv.addEventListener("click",()=>{
+          const eventTitle = prompt("Agregar evento para " + dayDate.toLocaleDateString('es-ES'));
+          if(eventTitle && eventTitle.trim()!==""){
+            const eventColor = prompt("Selecciona un color en formato HEX (ej: #ff0000):", "#2b6cb0");
+            events.push({date: dateStr, title: eventTitle.trim(), color: eventColor});
+            saveEvents();
+            renderWeek();
+          }
+        });
+
+        daysWeek.appendChild(dayDiv);
+      }
+    }
+
+    prevWeekBtn.onclick = ()=>{currentWeek.setDate(currentWeek.getDate()-7); renderWeek();}
+    nextWeekBtn.onclick = ()=>{currentWeek.setDate(currentWeek.getDate()+7); renderWeek();}
+    renderWeek();
+  </script>
+
+</body>
+</html>
+
