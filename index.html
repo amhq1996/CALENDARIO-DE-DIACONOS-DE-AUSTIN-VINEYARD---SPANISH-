@@ -3,250 +3,189 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calendario Semanal Vertical</title>
+  <title>Calendario Compartido</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
-  <div class="calendar-week">
-    <div id="snowContainer" class="snow-container"></div>
-    <div id="leavesContainer" class="leaves-container"></div>
-    <div id="flowersContainer" class="flowers-container"></div>
-    <div id="summerContainer" class="summer-container"></div>
-
-    <div class="header">
-      <button id="prevWeek">‹ Semana anterior</button>
-      <div class="week-label" id="weekLabel"></div>
-      <button id="nextWeek">Semana siguiente ›</button>
-    </div>
-
-    <div class="days-week" id="daysWeek"></div>
+<div class="calendar-week">
+  <div class="header">
+    <button id="prevWeek">‹ Semana anterior</button>
+    <div class="week-label" id="weekLabel"></div>
+    <button id="nextWeek">Semana siguiente ›</button>
   </div>
 
-  <!-- Color palette modal -->
-  <div id="colorModal" class="color-modal">
-    <div class="color-palette" id="colorPalette"></div>
-  </div>
+  <div class="days-week" id="daysWeek"></div>
+</div>
 
-  <script>
-    const daysWeek = document.getElementById("daysWeek");
-    const weekLabel = document.getElementById("weekLabel");
-    const prevWeekBtn = document.getElementById("prevWeek");
-    const nextWeekBtn = document.getElementById("nextWeek");
+<!-- Modal para seleccionar color -->
+<div id="colorModal" class="color-modal">
+  <div class="color-palette" id="colorPalette"></div>
+</div>
 
-    const snowContainer = document.getElementById("snowContainer");
-    const leavesContainer = document.getElementById("leavesContainer");
-    const flowersContainer = document.getElementById("flowersContainer");
-    const summerContainer = document.getElementById("summerContainer");
+<!-- Firebase Scripts -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
 
-    const colorModal = document.getElementById("colorModal");
-    const colorPalette = document.getElementById("colorPalette");
+<script>
+// ------------------------------------------------
+// 1. CONFIGURA TU PROYECTO DE FIREBASE AQUÍ
+// ------------------------------------------------
+const firebaseConfig = {
+    apiKey: "TUS DATOS AQUÍ",
+    authDomain: "TUS DATOS AQUÍ",
+    databaseURL: "TUS DATOS AQUÍ",
+    projectId: "TUS DATOS AQUÍ",
+    storageBucket: "TUS DATOS AQUÍ",
+    messagingSenderId: "TUS DATOS AQUÍ",
+    appId: "TUS DATOS AQUÍ"
+};
 
-    let events = JSON.parse(localStorage.getItem("calendarEvents")) || [];
-    let selectedDate = null;
-    let newEventTitle = "";
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-    // Start week on Sunday
-    let currentWeek = new Date();
-    currentWeek.setDate(currentWeek.getDate() - currentWeek.getDay());
+// ------------------------------------------------
+// VARIABLES PRINCIPALES
+// ------------------------------------------------
+let events = {};  
+let currentWeek = new Date();
+currentWeek.setDate(currentWeek.getDate() - currentWeek.getDay());
 
-    const colors = {
-      "Azul":"#2b6cb0",
-      "Rojo":"#e53e3e",
-      "Verde":"#38a169",
-      "Naranja":"#dd6b20",
-      "Morado":"#805ad5",
-      "Rosa":"#d53f8c"
-    };
+const daysWeekDiv = document.getElementById("daysWeek");
+const weekLabel = document.getElementById("weekLabel");
+const prevWeekBtn = document.getElementById("prevWeek");
+const nextWeekBtn = document.getElementById("nextWeek");
+const colorModal = document.getElementById("colorModal");
+const colorPalette = document.getElementById("colorPalette");
 
-    function saveEvents(){
-      localStorage.setItem("calendarEvents", JSON.stringify(events));
-    }
+let tempEventDay = null;
 
-    function setSeasonBackground(weekStart){
-      const month = weekStart.getMonth();
-      const calendar = document.querySelector(".calendar-week");
+// ------------------------------------------------
+// LEER EVENTOS EN TIEMPO REAL
+// ------------------------------------------------
+db.ref("events").on("value", snapshot => {
+    const data = snapshot.val();
+    events = data || {};
+    renderWeek();
+});
 
-      [snowContainer, leavesContainer, flowersContainer, summerContainer].forEach(c => {
-        c.style.display = "none";
-        c.innerHTML = "";
-      });
+// ------------------------------------------------
+// GUARDAR EVENTO
+// ------------------------------------------------
+function saveEvent(date, title, color) {
+    if (!events[date]) events[date] = [];
 
-      if([11,0,1].includes(month)){ // Winter
-        calendar.style.background = "linear-gradient(to bottom, #a0c4ff, #ffffff)";
-        snowContainer.style.display = "block";
-        addSnow();
-      } else if([2,3,4].includes(month)){ // Spring
-        calendar.style.background = "linear-gradient(to bottom, #ffe4e1, #fff0f5)";
-        flowersContainer.style.display = "block";
-        addRoses();
-      } else if([5,6,7].includes(month)){ // Summer
-        calendar.style.background = "linear-gradient(to bottom, #87ceeb, #ffe0a1)";
-        summerContainer.style.display = "block";
-        addWaves();
-      } else if([8,9,10].includes(month)){ // Autumn
-        calendar.style.background = "linear-gradient(to bottom, #ffb347, #ffcc99)";
-        leavesContainer.style.display = "block";
-        addRealLeaves();
-      }
-    }
+    events[date].push({ title, color });
 
-    function addSnow(){
-      for(let i=0;i<50;i++){
-        const flake = document.createElement("div");
-        flake.className = "snowflake";
-        const size = Math.random()*8 + 2;
-        flake.style.width = size + "px";
-        flake.style.height = size + "px";
-        flake.style.left = Math.random()*100 + "%";
-        flake.style.animationDuration = (Math.random()*3+3)+"s";
-        snowContainer.appendChild(flake);
-      }
-    }
+    db.ref("events").set(events);
+}
 
-    function addRealLeaves(){
-      const leafColors = ["#d2691e","#ff8c00","#a0522d","#ff4500"];
-      for(let i=0;i<40;i++){
-        const leaf = document.createElement("div");
-        leaf.className = "leaf";
-        const size = Math.random()*15 + 8;
-        leaf.style.width = size + "px";
-        leaf.style.height = size/2 + "px";
-        leaf.style.backgroundColor = leafColors[Math.floor(Math.random()*leafColors.length)];
-        leaf.style.left = Math.random()*100 + "%";
-        leaf.style.borderRadius = "50% 50% 50% 50% / 60% 60% 40% 40%";
-        leaf.style.transform = `rotate(${Math.random()*360}deg)`;
-        leaf.style.animationDuration = (Math.random()*5+5)+"s";
-        leavesContainer.appendChild(leaf);
-      }
-    }
+// ------------------------------------------------
+// BORRAR EVENTO
+// ------------------------------------------------
+function deleteEvent(date, index) {
+    events[date].splice(index, 1);
+    db.ref("events").set(events);
+}
 
-    function addRoses(){
-      const roseColors = ["#ff007f","#ff1493","#ff69b4"];
-      for(let i=0;i<30;i++){
-        const rose = document.createElement("div");
-        rose.className = "flower";
-        const size = Math.random()*12 + 8;
-        rose.style.width = size + "px";
-        rose.style.height = size + "px";
-        rose.style.left = Math.random()*100 + "%";
-        rose.style.backgroundColor = roseColors[Math.floor(Math.random()*roseColors.length)];
-        rose.style.borderRadius = "50%";
-        rose.style.animationDuration = (Math.random()*4+3)+"s";
-        flowersContainer.appendChild(rose);
-      }
-    }
+// ------------------------------------------------
+// RENDERIZAR LA SEMANA
+// ------------------------------------------------
+function renderWeek() {
+    daysWeekDiv.innerHTML = "";
 
-    function addWaves(){
-      for(let i=0;i<3;i++){
-        const wave = document.createElement("div");
-        wave.className = "wave";
-        wave.style.bottom = (i*20) + "px";
-        wave.style.animationDelay = (i*1.5)+"s";
-        summerContainer.appendChild(wave);
-      }
-    }
+    const start = new Date(currentWeek);
+    const end = new Date(currentWeek);
+    end.setDate(start.getDate() + 6);
 
-    function renderWeek(){
-      setSeasonBackground(currentWeek);
-      daysWeek.innerHTML = '';
+    weekLabel.innerHTML =
+        `${start.toLocaleDateString()} — ${end.toLocaleDateString()}`;
 
-      const weekStart = new Date(currentWeek);
-      const weekEnd = new Date(currentWeek);
-      weekEnd.setDate(weekEnd.getDate()+6);
-      weekLabel.textContent = `${weekStart.toLocaleDateString()} - ${weekEnd.toLocaleDateString()}`;
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(currentWeek);
+        date.setDate(date.getDate() + i);
 
-      for(let i=0;i<7;i++){
-        const dayDate = new Date(weekStart);
-        dayDate.setDate(weekStart.getDate() + i);
-        const dateStr = dayDate.toISOString().split("T")[0];
+        const dateStr = date.toISOString().split("T")[0];
 
         const dayDiv = document.createElement("div");
-        dayDiv.className = "day-week";
-        dayDiv.innerHTML = `<div class="day-num">${dayDate.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric'})}</div>`;
+        dayDiv.classList.add("day");
 
-        const eventsContainer = document.createElement("div");
-        eventsContainer.className = "events-container";
+        dayDiv.innerHTML = `
+            <div class="day-title">${date.toLocaleDateString("es-ES", {weekday:"long", month:"short", day:"numeric"})}</div>
+            <div class="events"></div>
+        `;
 
-        events.filter(e=>e.date===dateStr).forEach(ev=>{
-          const evDiv = document.createElement("div");
-          evDiv.className = "event-item";
-          evDiv.textContent = ev.title;
-          evDiv.style.backgroundColor = ev.color || "#2b6cb0";
+        // Mostrar eventos
+        const eventContainer = dayDiv.querySelector(".events");
 
-          const editBtn = document.createElement("button");
-          editBtn.className = "edit-btn";
-          editBtn.textContent = "✎";
-          editBtn.onclick = e=>{
-            e.stopPropagation();
-            const newTitle = prompt("Editar evento:", ev.title);
-            if(newTitle && newTitle.trim()!==""){
-              events[events.indexOf(ev)].title = newTitle.trim();
-              saveEvents();
-              renderWeek();
-            }
-          };
+        if (events[dateStr]) {
+            events[dateStr].forEach((event, idx) => {
+                const eventDiv = document.createElement("div");
+                eventDiv.classList.add("event");
+                eventDiv.style.background = event.color;
+                eventDiv.innerHTML = `
+                    ${event.title}
+                    <button class="delete-btn">X</button>
+                `;
 
-          const delBtn = document.createElement("button");
-          delBtn.className = "delete-btn";
-          delBtn.textContent = "🗑";
-          delBtn.onclick = e=>{
-            e.stopPropagation();
-            if(confirm("¿Eliminar evento?")){
-              events.splice(events.indexOf(ev),1);
-              saveEvents();
-              renderWeek();
-            }
-          };
+                eventDiv.querySelector(".delete-btn").onclick = () => deleteEvent(dateStr, idx);
+                eventContainer.appendChild(eventDiv);
+            });
+        }
 
-          evDiv.appendChild(editBtn);
-          evDiv.appendChild(delBtn);
-          eventsContainer.appendChild(evDiv);
+        // Agregar evento con click
+        dayDiv.addEventListener("click", () => {
+            const title = prompt("Event name:");
+            if (!title) return;
+            tempEventDay = dateStr;
+            openColorPicker(title);
         });
 
-        dayDiv.appendChild(eventsContainer);
-
-        dayDiv.addEventListener("click",()=>{
-          newEventTitle = prompt("Agregar nombre del evento para " + dayDate.toLocaleDateString('es-ES'));
-          if(newEventTitle && newEventTitle.trim() !== ""){
-            selectedDate = dateStr;
-            openColorPalette();
-          }
-        });
-
-        daysWeek.appendChild(dayDiv);
-      }
+        daysWeekDiv.appendChild(dayDiv);
     }
+}
 
-    function openColorPalette(){
-      colorPalette.innerHTML = "";
-      for(const [name, hex] of Object.entries(colors)){
-        const colorDiv = document.createElement("div");
-        colorDiv.className = "color-option";
-        colorDiv.style.backgroundColor = hex;
-        colorDiv.title = name;
-        colorDiv.onclick = ()=>{
-          events.push({date:selectedDate, title:newEventTitle.trim(), color:hex});
-          saveEvents();
-          colorModal.style.display = "none";
-          renderWeek();
+// ------------------------------------------------
+// PALETA DE COLORES
+// ------------------------------------------------
+function openColorPicker(title) {
+    colorPalette.innerHTML = "";
+
+    const colors = ["#ff5733", "#33ff57", "#3357ff", "#ff33a8", "#ffbd33"];
+
+    colors.forEach(color => {
+        const swatch = document.createElement("div");
+        swatch.classList.add("color-swatch");
+        swatch.style.background = color;
+        swatch.onclick = () => {
+            saveEvent(tempEventDay, title, color);
+            colorModal.style.display = "none";
         };
-        colorPalette.appendChild(colorDiv);
-      }
-      colorModal.style.display = "flex";
-    }
-
-    // Close modal if clicked outside
-    colorModal.addEventListener("click", e=>{
-      if(e.target === colorModal) colorModal.style.display = "none";
+        colorPalette.appendChild(swatch);
     });
 
-    prevWeekBtn.onclick = ()=>{currentWeek.setDate(currentWeek.getDate()-7); renderWeek();}
-    nextWeekBtn.onclick = ()=>{currentWeek.setDate(currentWeek.getDate()+7); renderWeek();}
-    renderWeek();
-  </script>
+    colorModal.style.display = "flex";
+}
 
+colorModal.addEventListener("click", () => {
+    colorModal.style.display = "none";
+});
+
+// ------------------------------------------------
+// BOTONES DE NAVEGACIÓN
+// ------------------------------------------------
+prevWeekBtn.onclick = () => {
+    currentWeek.setDate(currentWeek.getDate() - 7);
+    renderWeek();
+};
+nextWeekBtn.onclick = () => {
+    currentWeek.setDate(currentWeek.getDate() + 7);
+    renderWeek();
+};
+
+renderWeek();
+
+</script>
 </body>
 </html>
-
-
