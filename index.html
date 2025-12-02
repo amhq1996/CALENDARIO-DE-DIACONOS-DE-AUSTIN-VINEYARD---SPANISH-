@@ -1,191 +1,22 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calendario Compartido</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>Shared Calendar - Supabase</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="calendar-week">
+    <div class="header">
+      <button id="prevWeek">‹ Previous Week</button>
+      <div class="week-label" id="weekLabel"></div>
+      <button id="nextWeek">Next Week ›</button>
+    </div>
 
-<div class="calendar-week">
-  <div class="header">
-    <button id="prevWeek">‹ Semana anterior</button>
-    <div class="week-label" id="weekLabel"></div>
-    <button id="nextWeek">Semana siguiente ›</button>
+    <div class="days-week" id="daysWeek"></div>
   </div>
 
-  <div class="days-week" id="daysWeek"></div>
-</div>
-
-<!-- Modal para seleccionar color -->
-<div id="colorModal" class="color-modal">
-  <div class="color-palette" id="colorPalette"></div>
-</div>
-
-<!-- Firebase Scripts -->
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
-
-<script>
-// ------------------------------------------------
-// 1. CONFIGURA TU PROYECTO DE FIREBASE AQUÍ
-// ------------------------------------------------
-const firebaseConfig = {
-    apiKey: "TUS DATOS AQUÍ",
-    authDomain: "TUS DATOS AQUÍ",
-    databaseURL: "TUS DATOS AQUÍ",
-    projectId: "TUS DATOS AQUÍ",
-    storageBucket: "TUS DATOS AQUÍ",
-    messagingSenderId: "TUS DATOS AQUÍ",
-    appId: "TUS DATOS AQUÍ"
-};
-
-// Inicializar Firebase
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-// ------------------------------------------------
-// VARIABLES PRINCIPALES
-// ------------------------------------------------
-let events = {};  
-let currentWeek = new Date();
-currentWeek.setDate(currentWeek.getDate() - currentWeek.getDay());
-
-const daysWeekDiv = document.getElementById("daysWeek");
-const weekLabel = document.getElementById("weekLabel");
-const prevWeekBtn = document.getElementById("prevWeek");
-const nextWeekBtn = document.getElementById("nextWeek");
-const colorModal = document.getElementById("colorModal");
-const colorPalette = document.getElementById("colorPalette");
-
-let tempEventDay = null;
-
-// ------------------------------------------------
-// LEER EVENTOS EN TIEMPO REAL
-// ------------------------------------------------
-db.ref("events").on("value", snapshot => {
-    const data = snapshot.val();
-    events = data || {};
-    renderWeek();
-});
-
-// ------------------------------------------------
-// GUARDAR EVENTO
-// ------------------------------------------------
-function saveEvent(date, title, color) {
-    if (!events[date]) events[date] = [];
-
-    events[date].push({ title, color });
-
-    db.ref("events").set(events);
-}
-
-// ------------------------------------------------
-// BORRAR EVENTO
-// ------------------------------------------------
-function deleteEvent(date, index) {
-    events[date].splice(index, 1);
-    db.ref("events").set(events);
-}
-
-// ------------------------------------------------
-// RENDERIZAR LA SEMANA
-// ------------------------------------------------
-function renderWeek() {
-    daysWeekDiv.innerHTML = "";
-
-    const start = new Date(currentWeek);
-    const end = new Date(currentWeek);
-    end.setDate(start.getDate() + 6);
-
-    weekLabel.innerHTML =
-        `${start.toLocaleDateString()} — ${end.toLocaleDateString()}`;
-
-    for (let i = 0; i < 7; i++) {
-        const date = new Date(currentWeek);
-        date.setDate(date.getDate() + i);
-
-        const dateStr = date.toISOString().split("T")[0];
-
-        const dayDiv = document.createElement("div");
-        dayDiv.classList.add("day");
-
-        dayDiv.innerHTML = `
-            <div class="day-title">${date.toLocaleDateString("es-ES", {weekday:"long", month:"short", day:"numeric"})}</div>
-            <div class="events"></div>
-        `;
-
-        // Mostrar eventos
-        const eventContainer = dayDiv.querySelector(".events");
-
-        if (events[dateStr]) {
-            events[dateStr].forEach((event, idx) => {
-                const eventDiv = document.createElement("div");
-                eventDiv.classList.add("event");
-                eventDiv.style.background = event.color;
-                eventDiv.innerHTML = `
-                    ${event.title}
-                    <button class="delete-btn">X</button>
-                `;
-
-                eventDiv.querySelector(".delete-btn").onclick = () => deleteEvent(dateStr, idx);
-                eventContainer.appendChild(eventDiv);
-            });
-        }
-
-        // Agregar evento con click
-        dayDiv.addEventListener("click", () => {
-            const title = prompt("Event name:");
-            if (!title) return;
-            tempEventDay = dateStr;
-            openColorPicker(title);
-        });
-
-        daysWeekDiv.appendChild(dayDiv);
-    }
-}
-
-// ------------------------------------------------
-// PALETA DE COLORES
-// ------------------------------------------------
-function openColorPicker(title) {
-    colorPalette.innerHTML = "";
-
-    const colors = ["#ff5733", "#33ff57", "#3357ff", "#ff33a8", "#ffbd33"];
-
-    colors.forEach(color => {
-        const swatch = document.createElement("div");
-        swatch.classList.add("color-swatch");
-        swatch.style.background = color;
-        swatch.onclick = () => {
-            saveEvent(tempEventDay, title, color);
-            colorModal.style.display = "none";
-        };
-        colorPalette.appendChild(swatch);
-    });
-
-    colorModal.style.display = "flex";
-}
-
-colorModal.addEventListener("click", () => {
-    colorModal.style.display = "none";
-});
-
-// ------------------------------------------------
-// BOTONES DE NAVEGACIÓN
-// ------------------------------------------------
-prevWeekBtn.onclick = () => {
-    currentWeek.setDate(currentWeek.getDate() - 7);
-    renderWeek();
-};
-nextWeekBtn.onclick = () => {
-    currentWeek.setDate(currentWeek.getDate() + 7);
-    renderWeek();
-};
-
-renderWeek();
-
-</script>
+<script type="module" src="calendar.js"></script>
 </body>
 </html>
