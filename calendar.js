@@ -1,39 +1,35 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
-/* 🔴 REPLACE THESE WITH YOUR OWN */
-const SUPABASE_URL = "https://hpsrrjrxtlmwfjjepbkr.supabase.co";
-const SUPABASE_KEY = process.env.SUPABASE_KEY;
-
+// 🔹 SUPABASE CONNECTION
+const SUPABASE_URL = "PASTE_YOUR_PROJECT_URL_HERE";
+const SUPABASE_KEY = "PASTE_YOUR_ANON_KEY_HERE";
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let events = [];
 let currentWeek = new Date();
 currentWeek.setDate(currentWeek.getDate() - currentWeek.getDay());
 
-const daysWeekDiv = document.getElementById("daysWeek");
+const daysWeek = document.getElementById("daysWeek");
 const weekLabel = document.getElementById("weekLabel");
 
-document.getElementById("prevWeek").onclick = () => {
-  currentWeek.setDate(currentWeek.getDate() - 7);
-  loadCalendar();
-};
+const colors = ["#ff6b6b", "#6bcfff", "#6bff95", "#ffe36b", "#b46bff"];
 
-document.getElementById("nextWeek").onclick = () => {
-  currentWeek.setDate(currentWeek.getDate() + 7);
-  loadCalendar();
-};
-
-async function fetchEvents() {
+// 🔹 FETCH EVENTS
+async function loadEvents() {
   const { data } = await supabase.from("events").select("*");
   events = data || [];
 }
 
+// 🔹 ADD EVENT
 async function addEvent(event) {
   await supabase.from("events").insert([event]);
+  await loadEvents();
+  renderWeek();
 }
 
+// 🔹 RENDER WEEK
 function renderWeek() {
-  daysWeekDiv.innerHTML = "";
+  daysWeek.innerHTML = "";
 
   const start = new Date(currentWeek);
   const end = new Date(start);
@@ -44,13 +40,14 @@ function renderWeek() {
   for (let i = 0; i < 7; i++) {
     const date = new Date(start);
     date.setDate(start.getDate() + i);
+    const dateStr = date.toISOString().split("T")[0];
 
     const dayDiv = document.createElement("div");
     dayDiv.className = "day";
     dayDiv.innerHTML = `<h3>${date.toDateString()}</h3>`;
 
     events
-      .filter(e => new Date(e.date).toDateString() === date.toDateString())
+      .filter(e => e.date === dateStr)
       .forEach(e => {
         const ev = document.createElement("div");
         ev.className = "event";
@@ -59,35 +56,42 @@ function renderWeek() {
         dayDiv.appendChild(ev);
       });
 
-    dayDiv.onclick = async () => {
-      const title = prompt("Event title:");
+    dayDiv.onclick = () => {
+      const title = prompt("Event name:");
       if (!title) return;
 
-      const color = prompt("Color (red, blue, green, purple)?", "blue");
+      const picker = document.createElement("div");
+      picker.className = "color-picker";
 
-      const colorMap = {
-        red: "#ef4444",
-        blue: "#3b82f6",
-        green: "#22c55e",
-        purple: "#8b5cf6"
-      };
-
-      await addEvent({
-        title,
-        color: colorMap[color] || "#3b82f6",
-        date: date.toISOString().split("T")[0]
+      colors.forEach(c => {
+        const dot = document.createElement("div");
+        dot.className = "color";
+        dot.style.background = c;
+        dot.onclick = async () => {
+          await addEvent({ date: dateStr, title, color: c });
+          picker.remove();
+        };
+        picker.appendChild(dot);
       });
 
-      loadCalendar();
+      dayDiv.appendChild(picker);
     };
 
-    daysWeekDiv.appendChild(dayDiv);
+    daysWeek.appendChild(dayDiv);
   }
 }
 
-async function loadCalendar() {
-  await fetchEvents();
+// NAVIGATION
+document.getElementById("prevWeek").onclick = () => {
+  currentWeek.setDate(currentWeek.getDate() - 7);
   renderWeek();
-}
+};
 
-loadCalendar();
+document.getElementById("nextWeek").onclick = () => {
+  currentWeek.setDate(currentWeek.getDate() + 7);
+  renderWeek();
+};
+
+// INIT
+await loadEvents();
+renderWeek();
