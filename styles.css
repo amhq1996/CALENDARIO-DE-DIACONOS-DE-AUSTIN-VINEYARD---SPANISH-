@@ -1,83 +1,60 @@
-* {
-  box-sizing: border-box;
-}
-
 body {
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
   margin: 0;
   padding: 0;
-  background: linear-gradient(135deg, #dbeafe, #fef3c7);
-  font-family: Arial, sans-serif;
 }
 
-/* MAIN CONTAINER */
-.calendar-container {
+.calendar {
   max-width: 420px;
   margin: 20px auto;
   background: white;
-  border-radius: 14px;
-  padding: 14px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  border-radius: 10px;
+  padding: 10px;
 }
 
-/* HEADER */
-.calendar-header {
+.header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
-.calendar-header button {
-  background: #2563eb;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.calendar-header button:hover {
-  background: #1e40af;
-}
-
-.week-label {
-  font-weight: bold;
-  text-align: center;
-  font-size: 14px;
-}
-
-/* WEEK DAYS */
-.days-week {
+.days {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
-/* DAY CARD */
 .day {
-  background: #f9fafb;
-  border-radius: 12px;
+  background: #eaeaea;
   padding: 10px;
-  min-height: 90px;
-  border: 2px solid #e5e7eb;
+  border-radius: 6px;
   cursor: pointer;
-}
-
-.day:hover {
-  border-color: #2563eb;
 }
 
 .day h3 {
-  margin: 0 0 6px 0;
-  font-size: 14px;
-  color: #111827;
+  margin: 0 0 5px 0;
+  font-size: 16px;
 }
 
-/* EVENTS */
 .event {
-  padding: 6px;
-  border-radius: 6px;
-  margin-bottom: 4px;
+  padding: 5px;
+  border-radius: 5px;
+  margin-top: 4px;
   color: white;
-  font-size: 13px;
+  font-size: 14px;
+}
+
+.color-picker {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.color {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
 }
