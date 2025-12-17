@@ -1,22 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shared Calendar - Supabase</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shared Calendar</title>
+
+  <!-- VERY IMPORTANT -->
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="calendar-week">
-    <div class="header">
-      <button id="prevWeek">‹ Previous Week</button>
-      <div class="week-label" id="weekLabel"></div>
-      <button id="nextWeek">Next Week ›</button>
+
+  <div class="calendar-container">
+    <div class="calendar-header">
+      <button id="prevWeek">‹ Previous</button>
+      <div id="weekLabel" class="week-label"></div>
+      <button id="nextWeek">Next ›</button>
     </div>
 
-    <div class="days-week" id="daysWeek"></div>
+    <div id="daysWeek" class="days-week"></div>
   </div>
 
-<script type="module" src="calendar.js"></script>
+  <script type="module" src="calendar.js"></script>
 </body>
 </html>
